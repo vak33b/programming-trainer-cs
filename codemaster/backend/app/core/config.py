@@ -7,9 +7,9 @@ class Settings(BaseSettings):
     APP_DEBUG: bool = True
     SECRET_KEY: str = "dev-secret-change-me"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    DATABASE_URL: str = "sqlite+aiosqlite:///./codemaster.db"
+    # ВАЖНО: теперь postgres+asyncpg
+    DATABASE_URL: str = "postgresql+asyncpg://codemaster:codemaster@localhost:5432/codemaster"
 
-    # pydantic v2 стиль
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 @lru_cache
