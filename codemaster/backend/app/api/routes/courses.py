@@ -23,7 +23,7 @@ async def list_courses(db: AsyncSession = Depends(get_db)):
 async def create_course(
     payload: CourseCreate,
     db: AsyncSession = Depends(get_db),
-    _teacher: User = Depends(get_current_teacher),  # доступ только для преподавателей
+    teacher: User = Depends(get_current_teacher),
 ):
     # проверка на дубликат названия
     res = await db.execute(select(Course).where(Course.title == payload.title))
@@ -34,7 +34,11 @@ async def create_course(
             detail="Course title already exists",
         )
 
-    course = Course(title=payload.title, description=payload.description)
+    course = Course(
+        title=payload.title,
+        description=payload.description,
+        owner_id=teacher.id,        # <- ВЛАДЕЛЕЦ КУРСА
+    )
     db.add(course)
     await db.commit()
     await db.refresh(course)
