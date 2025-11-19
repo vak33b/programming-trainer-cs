@@ -9,4 +9,4 @@ asyncpg==0.29.0
 pyjwt==2.9.0
 passlib[bcrypt]==1.7.4
 uvicorn[standard]==0.30.6
- pip install pydantic[email]
+pip install pydantic[email]
