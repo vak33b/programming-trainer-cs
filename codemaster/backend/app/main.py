@@ -1,4 +1,5 @@
 ﻿from __future__ import annotations
+from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi import FastAPI
 
@@ -9,6 +10,18 @@ from app.db.database import wait_for_db  # если делали ожидани�
 
 app = FastAPI(title=get_settings().APP_NAME)
 
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 async def on_startup():

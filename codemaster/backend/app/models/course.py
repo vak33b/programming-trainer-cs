@@ -15,13 +15,16 @@ class Course(Base):
     title: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    # НОВОЕ: владелец курса (преподаватель)
+    # владелец курса (преподаватель)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-
     owner: Mapped["User"] = relationship(
         "User",
         back_populates="owner_courses",
     )
 
-    # если у тебя были связи lesson'ов — оставь:
-    # lessons: Mapped[List["Lesson"]] = relationship("Lesson", back_populates="course")
+    # ВАЖНО: вот эту связь как раз просит back_populates="lessons"
+    lessons: Mapped[List["Lesson"]] = relationship(
+        "Lesson",
+        back_populates="course",
+        cascade="all, delete-orphan",
+    )

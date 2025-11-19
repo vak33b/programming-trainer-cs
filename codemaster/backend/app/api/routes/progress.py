@@ -15,7 +15,6 @@ from app.schemas.progress import (
     ProgressOut,
     CompleteLessonRequest,
     CompleteTaskRequest,
-    StudentCourseProgressOut,
     CourseWithProgressOut, 
 )
 
@@ -317,10 +316,7 @@ async def get_my_courses_with_progress(
     db: AsyncSession = Depends(get_db),
     student: User = Depends(get_current_student),
 ):
-    """
-    Студент смотрит список курсов, по которым у него есть прогресс.
-    Если по курсу ещё нет записей в Progress — он сюда не попадёт.
-    """
+
 
     # берём все записи progress для этого студента + соответствующие курсы
     res = await db.execute(
