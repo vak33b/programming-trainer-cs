@@ -15,6 +15,8 @@ from app.schemas.progress import (
     ProgressOut,
     CompleteLessonRequest,
     CompleteTaskRequest,
+    StudentCourseProgressOut,
+    CourseWithProgressOut, 
 )
 
 router = APIRouter(prefix="/progress", tags=["progress"])
@@ -306,4 +308,40 @@ async def get_user_progress_all_courses(
     )
     items = res.scalars().all()
     return items
+
+@router.get(
+    "/my-courses",
+    response_model=list[CourseWithProgressOut],
+)
+async def get_my_courses_with_progress(
+    db: AsyncSession = Depends(get_db),
+    student: User = Depends(get_current_student),
+):
+    """
+    Студент смотрит список курсов, по которым у него есть прогресс.
+    Если по курсу ещё нет записей в Progress — он сюда не попадёт.
+    """
+
+    # берём все записи progress для этого студента + соответствующие курсы
+    res = await db.execute(
+        select(Progress, Course)
+        .join(Course, Course.id == Progress.course_id)
+        .where(Progress.user_id == student.id)
+    )
+    rows = res.all()
+
+    result: list[CourseWithProgressOut] = []
+    for progress, course in rows:
+        result.append(
+            CourseWithProgressOut(
+                course_id=course.id,
+                course_title=course.title,
+                course_description=course.description,
+                lessons_completed=progress.lessons_completed,
+                tasks_completed=progress.tasks_completed,
+                score_avg=progress.score_avg,
+            )
+        )
+
+    return result
 
