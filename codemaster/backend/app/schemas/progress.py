@@ -1,4 +1,6 @@
-﻿from pydantic import BaseModel
+﻿from __future__ import annotations
+from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr  # EmailStr уже может быть, не страшно
 
 class ProgressOut(BaseModel):
     user_id: int
@@ -6,5 +8,29 @@ class ProgressOut(BaseModel):
     lessons_completed: int
     tasks_completed: int
     score_avg: float
+
+    class Config:
+        from_attributes = True
+
+
+class CompleteLessonRequest(BaseModel):
+    # сейчас пустой — просто факт завершения урока
+    pass
+
+
+class CompleteTaskRequest(BaseModel):
+    score: float | None = None
+
+class CourseWithProgressOut(BaseModel):
+    course_id: int
+    course_title: str
+    course_description: str | None = None
+
+    lessons_completed: int
+    tasks_completed: int
+    score_avg: float
+    total_lessons: int = 0  # Общее количество уроков в курсе
+    total_tasks: int = 0  # Общее количество заданий в курсе
+
     class Config:
         from_attributes = True

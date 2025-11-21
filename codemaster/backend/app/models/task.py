@@ -1,13 +1,35 @@
-﻿from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, Text, ForeignKey, Boolean
+﻿from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text
+from sqlalchemy.orm import relationship
 from app.db.database import Base
 
 class Task(Base):
     __tablename__ = "tasks"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    lesson_id: Mapped[int] = mapped_column(ForeignKey("lessons.id", ondelete="CASCADE"))
-    title: Mapped[str] = mapped_column(String(255))
-    body: Mapped[str | None] = mapped_column(Text)
-    has_autocheck: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    id = Column(Integer, primary_key=True, index=True)
+    lesson_id = Column(Integer, ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False)
+
+    title = Column(String, nullable=False)
+    body = Column(Text, nullable=True)
+
+    has_autocheck = Column(Boolean, default=False)
 
     lesson = relationship("Lesson", back_populates="tasks")
+
+    # НОВОЕ:
+    options = relationship(
+        "TaskOption",
+        back_populates="task",
+        cascade="all, delete-orphan",
+    )
+
+
+class TaskOption(Base):
+    __tablename__ = "task_options"
+
+    id = Column(Integer, primary_key=True, index=True)
+    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+
+    text = Column(String, nullable=False)
+    is_correct = Column(Boolean, default=False)
+
+    task = relationship("Task", back_populates="options")
