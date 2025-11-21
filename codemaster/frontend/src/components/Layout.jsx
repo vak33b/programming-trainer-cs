@@ -5,6 +5,7 @@ import {
   BookOutlined,
   LoginOutlined,
   LogoutOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 
 const { Header, Content } = AntLayout;
@@ -20,14 +21,28 @@ export default function Layout({ children }) {
     navigate("/login");
   };
 
-   const menuItems = [];
+   const menuItems = [
+    {
+      key: "/",
+      icon: <HomeOutlined />,
+      label: <Link to="/">Главная</Link>,
+    },
+  ];
 
   if (user) {
-    menuItems.push({
-      key: "/my-courses",
-      icon: <BookOutlined />,
-      label: <Link to="/my-courses">Мои курсы</Link>,
-    });
+    // "Мои курсы" и "Все курсы" только для студентов (не преподавателей)
+    if (!user.is_teacher) {
+      menuItems.push({
+        key: "/all-courses",
+        icon: <BookOutlined />,
+        label: <Link to="/all-courses">Все курсы</Link>,
+      });
+      menuItems.push({
+        key: "/my-courses",
+        icon: <BookOutlined />,
+        label: <Link to="/my-courses">Мои курсы</Link>,
+      });
+    }
 
     if (user.is_teacher) {
       menuItems.push({
@@ -58,7 +73,7 @@ export default function Layout({ children }) {
           onClick={() => navigate("/")}
         >
           <Title level={3} style={{ color: "#fff", margin: 0 }}>
-            Codemaster
+            Bereza TRPS
           </Title>
         </div>
 

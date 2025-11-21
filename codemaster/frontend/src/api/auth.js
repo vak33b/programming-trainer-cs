@@ -9,6 +9,7 @@ export async function login(email, password) {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
+    timeout: 30000, // 30 секунд для запроса логина
   });
   return response.data;
 }

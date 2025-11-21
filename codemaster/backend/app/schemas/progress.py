@@ -29,6 +29,8 @@ class CourseWithProgressOut(BaseModel):
     lessons_completed: int
     tasks_completed: int
     score_avg: float
+    total_lessons: int = 0  # Общее количество уроков в курсе
+    total_tasks: int = 0  # Общее количество заданий в курсе
 
     class Config:
         from_attributes = True

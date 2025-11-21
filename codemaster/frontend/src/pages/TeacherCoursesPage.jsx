@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Card,
   List,
@@ -66,6 +66,10 @@ export default function TeacherCoursesPage() {
 
   return (
     <div>
+      <div style={{ marginBottom: 16 }}>
+        <Link to="/teacher">← На панель преподавателя</Link>
+      </div>
+      
       <Title level={2}>Мои курсы</Title>
 
       {error && (

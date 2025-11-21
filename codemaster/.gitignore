@@ -1,0 +1,28 @@
+# OS / Editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Python / Backend
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.env
+backend/.env.*
+backend/codemaster.db
+backend/*.sqlite
+backend/*.db
+backend/alembic/versions/*.pyc
+backend/alembic/versions/__pycache__/
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.npmrc
+
+# Logs
+*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*

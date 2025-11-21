@@ -24,6 +24,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -106,3 +107,30 @@ async def get_current_student(user: User = Depends(get_current_user)) -> User:
             detail="Only students can perform this action",
         )
     return user
+
+
+async def get_current_user_optional(
+    token: str | None = Depends(oauth2_scheme_optional),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    """
+    Опциональная версия get_current_user - возвращает None, если пользователь не авторизован.
+    """
+    if token is None:
+        return None
+    try:
+        payload = decode_token(token)
+        sub = payload.get("sub")
+        if sub is None:
+            return None
+        try:
+            user_id = int(sub)
+        except ValueError:
+            return None
+        res = await db.execute(select(User).where(User.id == user_id))
+        user = res.scalar_one_or_none()
+        if not user or not user.is_active:
+            return None
+        return user
+    except (HTTPException, jwt.PyJWTError):
+        return None

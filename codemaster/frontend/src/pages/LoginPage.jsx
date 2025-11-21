@@ -19,11 +19,19 @@ export default function LoginPage() {
 
   const onFinish = async (values) => {
     setError(null);
-    const res = await login(values.email, values.password);
-    if (res.success) {
-      navigate("/my-courses");
-    } else {
-      setError(res.message);
+    try {
+      const res = await login(values.email, values.password);
+      if (res && res.success) {
+        // Небольшая задержка, чтобы дать время загрузиться пользователю
+        setTimeout(() => {
+          navigate("/");
+        }, 100);
+      } else {
+        setError(res?.message || "Ошибка авторизации");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Произошла ошибка при авторизации");
     }
   };
 
@@ -37,7 +45,7 @@ export default function LoginPage() {
     >
       <Card style={{ width: 400 }} bordered={false}>
         <Title level={3} style={{ textAlign: "center", marginBottom: 24 }}>
-          Вход в Codemaster
+          Вход в Bereza TRPS
         </Title>
 
         {error && (

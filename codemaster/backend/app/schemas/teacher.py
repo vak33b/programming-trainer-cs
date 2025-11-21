@@ -1,6 +1,6 @@
 # app/schemas/teacher.py
-from typing import Optional
-from pydantic import BaseModel
+from typing import Optional, List
+from pydantic import BaseModel, field_validator
 
 
 # ---------- Курсы ----------
@@ -16,6 +16,7 @@ class TeacherCourseCreate(TeacherCourseBase):
 
 class TeacherCourseOut(TeacherCourseBase):
     id: int
+    students_count: int = 0  # Количество студентов, приступивших к курсу
 
     class Config:
         orm_mode = True
@@ -48,16 +49,47 @@ class TeacherTaskBase(BaseModel):
     has_autocheck: bool = False
 
 
-class TeacherTaskCreate(TeacherTaskBase):
-    pass
+class TaskOptionCreate(BaseModel):
+    text: str
+    is_correct: bool = False
 
 
-class TeacherTaskOut(TeacherTaskBase):
+class TaskOptionOut(BaseModel):
     id: int
-    lesson_id: int
+    text: str
+    is_correct: bool
 
     class Config:
         orm_mode = True
+
+
+class TeacherTaskCreate(BaseModel):
+    title: str
+    body: Optional[str] = None
+    options: List[TaskOptionCreate]
+
+    @field_validator("options")
+    @classmethod
+    def validate_options(cls, v):
+        if len(v) != 4:
+            raise ValueError("Должно быть ровно 4 варианта ответа")
+        correct_count = sum(1 for o in v if o.is_correct)
+        if correct_count != 1:
+            raise ValueError("Должен быть ровно один правильный вариант")
+        return v
+
+
+class TeacherTaskOut(BaseModel):
+    id: int
+    lesson_id: int
+    title: str
+    body: Optional[str]
+    has_autocheck: bool
+    options: List[TaskOptionOut]
+
+    class Config:
+        orm_mode = True
+
 
 
 # ---------- Прогресс студентов ----------

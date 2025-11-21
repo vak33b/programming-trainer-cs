@@ -40,7 +40,7 @@ export async function getLessonTasks(lessonId) {
 
 // Создать задание
 export async function createTask(lessonId, payload) {
-  // { title, body, has_autocheck }
+  // { title, body, options: [{ text, is_correct }, ...] }
   const res = await api.post(`/teacher/lessons/${lessonId}/tasks`, payload);
   return res.data;
 }

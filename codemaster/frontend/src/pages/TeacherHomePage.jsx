@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Card,
   Table,
@@ -7,15 +7,21 @@ import {
   Alert,
   Spin,
   Button,
+  List,
+  Row,
+  Col,
+  Tag,
 } from "antd";
-import { getStudentsProgress } from "../api/teacher";
-import { EditOutlined } from "@ant-design/icons";
+import { getStudentsProgress, getTeacherCourses } from "../api/teacher";
+import { EditOutlined, UserOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
 export default function TeacherHomePage() {
   const [students, setStudents] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingCourses, setLoadingCourses] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -32,6 +38,21 @@ export default function TeacherHomePage() {
       }
     };
     load();
+  }, []);
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const data = await getTeacherCourses();
+        setCourses(data);
+      } catch (e) {
+        console.error(e);
+        setError("Не удалось загрузить список курсов.");
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+    loadCourses();
   }, []);
 
   const columns = [
@@ -97,32 +118,84 @@ export default function TeacherHomePage() {
 
       </div>
 
-      <Card>
-        <Title level={4}>Студенты и прогресс</Title>
+      <Row gutter={16}>
+        {/* Левая колонка: Курсы */}
+        <Col span={12}>
+          <Card>
+            <Title level={4}>Мои курсы</Title>
 
-        {loading ? (
-          <div style={{ textAlign: "center", marginTop: 32 }}>
-            <Spin size="large" />
-          </div>
-        ) : error ? (
-          <Alert
-            type="error"
-            message={error}
-            showIcon
-            style={{ marginTop: 16 }}
-          />
-        ) : students.length === 0 ? (
-          <Text>Пока нет студентов с прогрессом по вашим курсам.</Text>
-        ) : (
-          <Table
-            dataSource={students}
-            columns={columns}
-            rowKey={(record) => record.user_id}
-            style={{ marginTop: 16 }}
-            pagination={{ pageSize: 10 }}
-          />
-        )}
-      </Card>
+            {loadingCourses ? (
+              <div style={{ textAlign: "center", marginTop: 32 }}>
+                <Spin size="large" />
+              </div>
+            ) : courses.length === 0 ? (
+              <Text>У вас пока нет курсов.</Text>
+            ) : (
+              <List
+                dataSource={courses}
+                renderItem={(course) => (
+                  <List.Item
+                    actions={[
+                      <Link to={`/teacher/courses/${course.id}`} key="edit">
+                        <Button type="link">Редактировать</Button>
+                      </Link>,
+                    ]}
+                  >
+                    <List.Item.Meta
+                      title={
+                        <div>
+                          {course.title}
+                          <Tag
+                            icon={<UserOutlined />}
+                            color="blue"
+                            style={{ marginLeft: 8 }}
+                          >
+                            {course.students_count} студент
+                            {course.students_count !== 1 ? "ов" : ""}
+                          </Tag>
+                        </div>
+                      }
+                      description={course.description}
+                    />
+                  </List.Item>
+                )}
+              />
+            )}
+          </Card>
+        </Col>
+
+        {/* Правая колонка: Студенты и прогресс */}
+        <Col span={12}>
+          <Card>
+            <Title level={4}>Студенты и прогресс</Title>
+
+            {loading ? (
+              <div style={{ textAlign: "center", marginTop: 32 }}>
+                <Spin size="large" />
+              </div>
+            ) : error ? (
+              <Alert
+                type="error"
+                message={error}
+                showIcon
+                style={{ marginTop: 16 }}
+              />
+            ) : students.length === 0 ? (
+              <Text>Пока нет студентов с прогрессом по вашим курсам.</Text>
+            ) : (
+              <Table
+                dataSource={students}
+                columns={columns}
+                rowKey={(record) => record.user_id}
+                style={{ marginTop: 16 }}
+                pagination={{ pageSize: 10 }}
+                size="small"
+                scroll={{ x: 600 }}
+              />
+            )}
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 }

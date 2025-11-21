@@ -5,10 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.db.database import get_db
-from app.core.security import get_current_teacher, get_current_user
+from app.core.security import get_current_teacher, get_current_user, get_current_user_optional
 from app.models.user import User
 from app.models.lesson import Lesson
 from app.models.course import Course
+from app.models.progress import LessonCompletion
 from app.schemas.lesson import LessonCreate, LessonOut  # поправь имена схем, если у тебя другие
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
@@ -18,17 +19,39 @@ router = APIRouter(prefix="/lessons", tags=["lessons"])
 async def list_lessons(
     course_id: int | None = None,
     db: AsyncSession = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user_optional),
 ):
     """
     Список уроков.
     Если передан course_id — только для этого курса.
+    Для авторизованных студентов показывает, завершен ли урок.
     """
     stmt = select(Lesson)
     if course_id is not None:
         stmt = stmt.where(Lesson.course_id == course_id)
     res = await db.execute(stmt.order_by(Lesson.id))
-    return res.scalars().all()
+    lessons = res.scalars().all()
+    
+    # Если пользователь авторизован, проверяем, какие уроки завершены
+    completed_lesson_ids = set()
+    if current_user:
+        completion_res = await db.execute(
+            select(LessonCompletion.lesson_id).where(
+                LessonCompletion.user_id == current_user.id
+            )
+        )
+        completed_lesson_ids = {row[0] for row in completion_res.all()}
+    
+    return [
+        LessonOut(
+            id=lesson.id,
+            course_id=lesson.course_id,
+            title=lesson.title,
+            content=lesson.content,
+            is_completed=lesson.id in completed_lesson_ids,
+        )
+        for lesson in lessons
+    ]
 
 
 @router.get("/{lesson_id}", response_model=LessonOut)

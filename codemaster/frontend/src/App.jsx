@@ -12,17 +12,17 @@ import CourseLessonsEditorPage from "./pages/CourseLessonsEditorPage";
 
 import LoginPage from "./pages/LoginPage";
 import MyCoursesPage from "./pages/MyCoursesPage";
+import CoursePage from "./pages/CoursePage";
+import HomePage from "./pages/HomePage";
+import AllCoursesPage from "./pages/AllCoursesPage";
 
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<HomePage />} />
       <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <MyCoursesPage />
-          </ProtectedRoute>
-        }
+        path="/home"
+        element={<HomePage />}
       />
 
       <Route path="/login" element={<LoginPage />} />
@@ -33,6 +33,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <MyCoursesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/all-courses"
+        element={
+          <ProtectedRoute>
+            <AllCoursesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/courses/:courseId"
+        element={
+          <ProtectedRoute>
+            <CoursePage />
           </ProtectedRoute>
         }
       />

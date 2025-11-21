@@ -72,6 +72,7 @@ class TaskCompletion(Base):
         nullable=False,
     )
     score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    selected_option_id: Mapped[Optional[int]] = mapped_column(ForeignKey("task_options.id"), nullable=True)
 
     user: Mapped["User"] = relationship(
         "User",

@@ -308,6 +308,53 @@ async def get_user_progress_all_courses(
     items = res.scalars().all()
     return items
 
+@router.post(
+    "/courses/{course_id}/enroll",
+    response_model=ProgressOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def enroll_in_course(
+    course_id: int,
+    db: AsyncSession = Depends(get_db),
+    student: User = Depends(get_current_student),
+):
+    """
+    Записаться на курс (создать запись Progress).
+    """
+    # Проверяем, что курс существует
+    res = await db.execute(select(Course).where(Course.id == course_id))
+    course = res.scalar_one_or_none()
+    if course is None:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    # Проверяем, не записан ли уже студент на курс
+    res = await db.execute(
+        select(Progress).where(
+            Progress.user_id == student.id,
+            Progress.course_id == course_id,
+        )
+    )
+    existing_progress = res.scalar_one_or_none()
+    if existing_progress:
+        raise HTTPException(
+            status_code=400,
+            detail="Вы уже записаны на этот курс"
+        )
+    
+    # Создаем новую запись Progress
+    progress = Progress(
+        user_id=student.id,
+        course_id=course_id,
+        lessons_completed=0,
+        tasks_completed=0,
+        score_avg=0.0,
+    )
+    db.add(progress)
+    await db.commit()
+    await db.refresh(progress)
+    return progress
+
+
 @router.get(
     "/my-courses",
     response_model=list[CourseWithProgressOut],
@@ -328,6 +375,20 @@ async def get_my_courses_with_progress(
 
     result: list[CourseWithProgressOut] = []
     for progress, course in rows:
+        # Подсчитываем общее количество уроков в курсе
+        lessons_res = await db.execute(
+            select(func.count(Lesson.id)).where(Lesson.course_id == course.id)
+        )
+        total_lessons = lessons_res.scalar_one() or 0
+        
+        # Подсчитываем общее количество заданий в курсе
+        tasks_res = await db.execute(
+            select(func.count(Task.id))
+            .join(Lesson, Lesson.id == Task.lesson_id)
+            .where(Lesson.course_id == course.id)
+        )
+        total_tasks = tasks_res.scalar_one() or 0
+        
         result.append(
             CourseWithProgressOut(
                 course_id=course.id,
@@ -336,6 +397,8 @@ async def get_my_courses_with_progress(
                 lessons_completed=progress.lessons_completed,
                 tasks_completed=progress.tasks_completed,
                 score_avg=progress.score_avg,
+                total_lessons=total_lessons,
+                total_tasks=total_tasks,
             )
         )
 

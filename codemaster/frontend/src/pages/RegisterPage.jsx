@@ -60,7 +60,7 @@ export default function RegisterPage() {
     >
       <Card style={{ width: 450 }} bordered={false}>
         <Title level={3} style={{ textAlign: "center", marginBottom: 24 }}>
-          Регистрация в Codemaster
+          Регистрация в Bereza TRPS
         </Title>
 
         {error && (

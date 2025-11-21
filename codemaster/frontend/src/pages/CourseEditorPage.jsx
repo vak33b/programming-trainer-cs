@@ -10,7 +10,9 @@ import {
   Button,
   Alert,
   Spin,
-  Switch,
+  Radio,
+  Space,
+  Divider,
 } from "antd";
 import {
   getTeacherCourses,
@@ -135,16 +137,37 @@ export default function CourseEditorPage() {
     }
     setError(null);
     try {
+      // Формируем массив вариантов ответов
+      const options = [
+        { text: values.option1, is_correct: values.correct_option === 1 },
+        { text: values.option2, is_correct: values.correct_option === 2 },
+        { text: values.option3, is_correct: values.correct_option === 3 },
+        { text: values.option4, is_correct: values.correct_option === 4 },
+      ];
+
+      // Проверяем, что все варианты заполнены
+      if (!options.every(opt => opt.text && opt.text.trim())) {
+        setError("Все 4 варианта ответа должны быть заполнены.");
+        return;
+      }
+
+      // Проверяем, что выбран правильный ответ
+      if (!values.correct_option) {
+        setError("Выберите правильный вариант ответа.");
+        return;
+      }
+
       const newTask = await createTask(selectedLesson.id, {
         title: values.title,
         body: values.body,
-        has_autocheck: values.has_autocheck || false,
+        options: options,
       });
       setTasks((prev) => [...prev, newTask]);
       taskForm.resetFields();
     } catch (e) {
       console.error(e);
-      setError("Ошибка при создании задания.");
+      const errorMessage = e.response?.data?.detail || "Ошибка при создании задания.";
+      setError(errorMessage);
     }
   };
 
@@ -332,12 +355,49 @@ export default function CourseEditorPage() {
                 dataSource={tasks}
                 renderItem={(task) => (
                   <List.Item>
-                    <List.Item.Meta
-                      title={task.title}
-                      description={
-                        task.body && task.body.slice(0, 80)
-                      }
-                    />
+                    <div style={{ width: "100%" }}>
+                      <List.Item.Meta
+                        title={
+                          <Space>
+                            {task.title}
+                            {task.has_autocheck && (
+                              <Text type="success" style={{ fontSize: 12 }}>
+                                ✓ Автопроверка
+                              </Text>
+                            )}
+                          </Space>
+                        }
+                        description={
+                          <div>
+                            {task.body && (
+                              <Text style={{ display: "block", marginBottom: 8 }}>
+                                {task.body}
+                              </Text>
+                            )}
+                            {task.options && task.options.length > 0 && (
+                              <div>
+                                <Text strong style={{ display: "block", marginBottom: 4 }}>
+                                  Варианты ответов:
+                                </Text>
+                                {task.options.map((opt, idx) => (
+                                  <Text
+                                    key={opt.id}
+                                    style={{
+                                      display: "block",
+                                      marginLeft: 16,
+                                      color: opt.is_correct ? "#52c41a" : undefined,
+                                    }}
+                                  >
+                                    {idx + 1}. {opt.text}
+                                    {opt.is_correct && " ✓"}
+                                  </Text>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        }
+                      />
+                    </div>
                   </List.Item>
                 )}
               />
@@ -360,15 +420,68 @@ export default function CourseEditorPage() {
                 <Input />
               </Form.Item>
               <Form.Item label="Текст задания" name="body">
-                <TextArea rows={4} />
+                <TextArea rows={4} placeholder="Вопрос к заданию" />
               </Form.Item>
+              
+              <Divider>Варианты ответов (4 варианта)</Divider>
+              
               <Form.Item
-                label="Автопроверка"
-                name="has_autocheck"
-                valuePropName="checked"
+                label="Вариант 1"
+                name="option1"
+                rules={[
+                  { required: true, message: "Введите вариант ответа" },
+                ]}
               >
-                <Switch />
+                <Input placeholder="Текст первого варианта" />
               </Form.Item>
+              
+              <Form.Item
+                label="Вариант 2"
+                name="option2"
+                rules={[
+                  { required: true, message: "Введите вариант ответа" },
+                ]}
+              >
+                <Input placeholder="Текст второго варианта" />
+              </Form.Item>
+              
+              <Form.Item
+                label="Вариант 3"
+                name="option3"
+                rules={[
+                  { required: true, message: "Введите вариант ответа" },
+                ]}
+              >
+                <Input placeholder="Текст третьего варианта" />
+              </Form.Item>
+              
+              <Form.Item
+                label="Вариант 4"
+                name="option4"
+                rules={[
+                  { required: true, message: "Введите вариант ответа" },
+                ]}
+              >
+                <Input placeholder="Текст четвертого варианта" />
+              </Form.Item>
+              
+              <Form.Item
+                label="Правильный ответ"
+                name="correct_option"
+                rules={[
+                  { required: true, message: "Выберите правильный вариант" },
+                ]}
+              >
+                <Radio.Group>
+                  <Space direction="vertical">
+                    <Radio value={1}>Вариант 1</Radio>
+                    <Radio value={2}>Вариант 2</Radio>
+                    <Radio value={3}>Вариант 3</Radio>
+                    <Radio value={4}>Вариант 4</Radio>
+                  </Space>
+                </Radio.Group>
+              </Form.Item>
+              
               <Form.Item>
                 <Button
                   type="primary"
